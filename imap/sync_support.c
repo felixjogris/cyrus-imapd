@@ -3383,10 +3383,11 @@ int sync_apply_unmailbox(struct dlist *kin, struct sync_state *sstate)
     struct mboxlock *namespacelock = mboxname_usernamespacelock(mboxname);
 
     /* Delete with admin privileges */
+    int delflags = MBOXLIST_DELETE_FORCE;
+    if (sstate->local_only) delflags |= MBOXLIST_DELETE_LOCALONLY;
     int r = mboxlist_deletemailbox_full(mboxname, sstate->userisadmin,
                                         sstate->userid, sstate->authstate,
-                                        NULL, 0, sstate->local_only, 1, 0,
-                                        /*silent*/1);
+                                        NULL, delflags, /*silent*/1);
 
     mboxname_release(&namespacelock);
 
@@ -3696,11 +3697,13 @@ int sync_apply_unuser(struct dlist *kin, struct sync_state *sstate)
     if (r) goto done;
 
     /* delete in reverse so INBOX is last */
+    int delflags = MBOXLIST_DELETE_FORCE;
+    if (sstate->local_only) delflags |= MBOXLIST_DELETE_LOCALONLY;
     for (i = list->count; i; i--) {
         const char *name = strarray_nth(list, i-1);
         r = mboxlist_deletemailbox(name, sstate->userisadmin,
                                    sstate->userid, sstate->authstate,
-                                   NULL, 0, sstate->local_only, 1, 0);
+                                   NULL, delflags);
         if (r) goto done;
     }
 
